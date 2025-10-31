@@ -4,6 +4,16 @@ import { Button } from "./ui/button";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useLibrary } from "@/contexts/LibraryContext";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { toast } from "sonner";
 
 interface SongCardProps {
   track: Track;
@@ -13,7 +23,7 @@ interface SongCardProps {
 
 export function SongCard({ track, index, showIndex = false }: SongCardProps) {
   const { playTrack, currentTrack, isPlaying } = usePlayer();
-  const { isLiked, addLikedSong, removeLikedSong } = useLibrary();
+  const { isLiked, addLikedSong, removeLikedSong, playlists, addTrackToPlaylist } = useLibrary();
 
   const isCurrentTrack = currentTrack?.id === track.id;
 
@@ -28,6 +38,11 @@ export function SongCard({ track, index, showIndex = false }: SongCardProps) {
     } else {
       addLikedSong(track);
     }
+  };
+
+  const handleAddToPlaylist = (playlistId: string, playlistName: string) => {
+    addTrackToPlaylist(playlistId, track);
+    toast.success(`Added to ${playlistName}`);
   };
 
   return (
@@ -92,6 +107,40 @@ export function SongCard({ track, index, showIndex = false }: SongCardProps) {
             )}
           />
         </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="opacity-0 group-hover:opacity-100"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MoreVertical className="w-5 h-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>Add to Playlist</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                {playlists.length === 0 ? (
+                  <DropdownMenuItem disabled>No playlists yet</DropdownMenuItem>
+                ) : (
+                  playlists.map((playlist) => (
+                    <DropdownMenuItem
+                      key={playlist.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddToPlaylist(playlist.id, playlist.name);
+                      }}
+                    >
+                      {playlist.name}
+                    </DropdownMenuItem>
+                  ))
+                )}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <span className="text-sm text-muted-foreground w-12 text-right">
           {Math.floor(track.duration / 60000)}:{String(Math.floor((track.duration % 60000) / 1000)).padStart(2, "0")}
         </span>
